@@ -8,16 +8,15 @@ from sentry.organizations.services.organization.model import RpcOrganization
 from sentry.plugins.base.response import DeferredResponse
 from .client import GitLabApiError, GitLabClient
 from .constants import AUTHORIZE_URL, ACCESS_TOKEN_URL, CLIENT_ID, CLIENT_SECRET, SCOPE
-from .views import ConfirmEmail, FetchUser, SelectOrganization, gitlab_configure_view
+from .views import FetchUser, gitlab_configure_view
 
 class GitLabOAuth2Provider(OAuth2Provider):
     access_token_url = ACCESS_TOKEN_URL
     authorize_url = AUTHORIZE_URL
     name = 'GitLab'
 
-    def __init__(self, org=None, **config):
+    def __init__(self, **config):
         super().__init__(**config)
-        self.org = org
 
     def get_client_id(self):
         return CLIENT_ID
@@ -42,30 +41,20 @@ class GitLabOAuth2Provider(OAuth2Provider):
                 client_id=self.get_client_id(),
                 client_secret=self.get_client_secret(),
             ),
-            FetchUser(org=self.org),
-            ConfirmEmail(),
+            FetchUser()
         ]
 
     def get_setup_pipeline(self):
-        pipeline = self.get_auth_pipeline()
-        pipeline.append(SelectOrganization())
-        return pipeline
+        return self.get_auth_pipeline()
 
     def get_refresh_token_url(self):
         return ACCESS_TOKEN_URL
 
     def build_config(self, state):
         """
-        On configuration, we determine which provider organization to configure SSO for.
-        This configuration is then stored and passed into the pipeline instances during SSO
-        to determine whether the Auth'd user has the appropriate access to the provider org.
+        Build the provider configuration.
         """
-        return {
-            "org": {
-                "id": state["org"]["id"],
-                "name": state["org"]["path"]  # GitLab uses 'path' instead of 'login'
-            }
-        }
+        return {}
 
     def build_identity(self, state):
         data = state["data"]
@@ -80,7 +69,7 @@ class GitLabOAuth2Provider(OAuth2Provider):
     def refresh_identity(self, auth_identity):
         with GitLabClient(auth_identity.data["access_token"]) as client:
             try:
-                if not client.is_group_member(self.org["id"]):  # GitLab uses groups instead of organizations
-                    raise IdentityNotValid
+                # Just verify that we can still access the user's data
+                client.get_user()
             except GitLabApiError as e:
                 raise IdentityNotValid(e)
