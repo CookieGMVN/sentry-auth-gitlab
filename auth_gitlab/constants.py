@@ -11,6 +11,6 @@ SCOPE = "read_user read_api"
 
 BASE_DOMAIN = settings.GITLAB_BASE_DOMAIN
 
-API_DOMAIN = f"https://{BASE_DOMAIN}/api/v4"
+API_DOMAIN = BASE_DOMAIN
 ACCESS_TOKEN_URL = f"https://{BASE_DOMAIN}/oauth/token"
 AUTHORIZE_URL = f"https://{BASE_DOMAIN}/oauth/authorize"
