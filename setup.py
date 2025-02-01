@@ -33,6 +33,11 @@ setup(
     tests_require=tests_require,
     extras_require={'tests': tests_require},
     include_package_data=True,
+    package_data={
+        "auth_gitlab": [
+            "templates/sentry_auth_gitlab/*.html",
+        ],
+    },
     entry_points={
         'sentry.apps': [
             'auth_gitlab = auth_gitlab.apps.Config',
