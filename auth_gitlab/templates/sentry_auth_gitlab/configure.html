@@ -1,5 +1,13 @@
-<h3>Group</h3>
+{% extends "sentry/bases/modal.html" %}
 
-<p>Users will be allowed to authenticate if they are a member of the <strong>{{ provider.group.name }}</strong> group.</p>
+{% block title %}GitLab Configuration{% endblock %}
 
-{% extends "sentry/bases/auth.html" %}
+{% block content %}
+  <div class="box">
+    <div class="box-content with-padding">
+      <h3>Group</h3>
+
+      <p>Users will be allowed to authenticate if they are a member of the <strong>{{ provider.group.name }}</strong> group.</p>
+    </div>
+  </div>
+{% endblock %}

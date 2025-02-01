@@ -1,14 +1,18 @@
-{% extends "sentry/bases/auth.html" %}
+{% extends "sentry/bases/modal.html" %}
 
-{% block auth_main %}
-  <h3>Select Group</h3>
+{% block title %}Select GitLab Group{% endblock %}
 
-  <p>
-    Select the GitLab group to link with Sentry. This will restrict
-    access to only group members.
-  </p>
+{% block content %}
+  <div class="box">
+    <div class="box-content with-padding">
+      <h3>Select Group</h3>
 
-  {% with submit_label="Continue" %}
-    {% include "sentry/partial/_form.html" %}
-  {% endwith %}
+      <p>
+        Select the GitLab group to link with Sentry. This will restrict
+        access to only group members.
+      </p>
+
+      {% include "sentry/partial/_form.html" with submit_label="Continue" %}
+    </div>
+  </div>
 {% endblock %}

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections.abc import Callable
 from django.http.request import HttpRequest
 from sentry.auth.exceptions import IdentityNotValid

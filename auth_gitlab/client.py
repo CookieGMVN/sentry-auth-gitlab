@@ -26,7 +26,7 @@ class GitLabClient:
 
         try:
             req = self.http.get(
-                f"https://{API_DOMAIN}/{path.lstrip('/')}",
+                f"https://{API_DOMAIN}/api/v4/{path.lstrip('/')}",
                 headers=headers,
             )
         except RequestException as e:
@@ -36,10 +36,10 @@ class GitLabClient:
         return orjson.loads(req.content)
 
     def get_group_list(self):
-        return self._request("/api/v4/groups")
+        return self._request("groups")
 
     def get_user(self):
-        return self._request("/api/v4/user")
+        return self._request("user")
 
     def is_group_member(self, group_id):
         group_id = str(group_id)

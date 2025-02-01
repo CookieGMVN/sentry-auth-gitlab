@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from django import forms
 from django.http import HttpRequest, HttpResponse
 from django.http.response import HttpResponseBase
@@ -67,7 +68,7 @@ class SelectGroupForm(forms.Form):
 
     def __init__(self, group_list, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        set_field_choices(self.fields["group"], [(g["id"], g["name"]) for g in group_list])
+        set_field_choices(self.fields["group"], [(str(g["id"]), g["name"]) for g in group_list])
 
 
 class SelectGroup(AuthView):
@@ -78,7 +79,7 @@ class SelectGroup(AuthView):
         form = SelectGroupForm(group_list, request.POST or None)
         if form.is_valid():
             group_id = form.cleaned_data["group"]
-            group = [g for g in group_list if group_id == str(g["id"])][0]
+            group = [g for g in group_list if str(g["id"]) == group_id][0]
             helper.bind_state("group", group)
             return helper.next_step()
 
