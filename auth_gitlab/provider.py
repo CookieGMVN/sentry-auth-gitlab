@@ -2,27 +2,36 @@ from __future__ import annotations
 from collections.abc import Callable
 from django.http.request import HttpRequest
 from sentry.auth.exceptions import IdentityNotValid
-from sentry.auth.providers.oauth2 import OAuth2Callback, OAuth2Provider, OAuth2Login
+from sentry.auth.providers.oauth2 import OAuth2Callback, OAuth2Login, OAuth2Provider
 from sentry.auth.services.auth.model import RpcAuthProvider
 from sentry.organizations.services.organization.model import RpcOrganization
 from sentry.plugins.base.response import DeferredResponse
+
 from .client import GitLabApiError, GitLabClient
-from .constants import AUTHORIZE_URL, ACCESS_TOKEN_URL, CLIENT_ID, CLIENT_SECRET, SCOPE
-from .views import FetchUser, gitlab_configure_view
+from .constants import (
+    ACCESS_TOKEN_URL,
+    AUTHORIZE_URL,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    SCOPE,
+)
+from .views import ConfirmEmail, FetchUser, SelectGroup, gitlab_configure_view
+
 
 class GitLabOAuth2Provider(OAuth2Provider):
     access_token_url = ACCESS_TOKEN_URL
     authorize_url = AUTHORIZE_URL
-    name = 'GitLab'
-
-    def __init__(self, **config):
-        super().__init__(**config)
+    name = "GitLab"
 
     def get_client_id(self):
         return CLIENT_ID
 
     def get_client_secret(self):
         return CLIENT_SECRET
+
+    def __init__(self, group=None, **config):
+        super().__init__(**config)
+        self.group = group
 
     def get_configure_view(
         self,
@@ -41,20 +50,20 @@ class GitLabOAuth2Provider(OAuth2Provider):
                 client_id=self.get_client_id(),
                 client_secret=self.get_client_secret(),
             ),
-            FetchUser()
+            FetchUser(group=self.group),
+            ConfirmEmail(),
         ]
 
     def get_setup_pipeline(self):
-        return self.get_auth_pipeline()
+        pipeline = self.get_auth_pipeline()
+        pipeline.append(SelectGroup())
+        return pipeline
 
     def get_refresh_token_url(self):
         return ACCESS_TOKEN_URL
 
     def build_config(self, state):
-        """
-        Build the provider configuration.
-        """
-        return {}
+        return {"group": {"id": state["group"]["id"], "name": state["group"]["name"]}}
 
     def build_identity(self, state):
         data = state["data"]
@@ -69,7 +78,7 @@ class GitLabOAuth2Provider(OAuth2Provider):
     def refresh_identity(self, auth_identity):
         with GitLabClient(auth_identity.data["access_token"]) as client:
             try:
-                # Just verify that we can still access the user's data
-                client.get_user()
+                if not client.is_group_member(self.group["id"]):
+                    raise IdentityNotValid
             except GitLabApiError as e:
                 raise IdentityNotValid(e)
