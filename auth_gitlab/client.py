@@ -26,7 +26,7 @@ class GitLabClient:
 
         try:
             req = self.http.get(
-                f"https://{API_DOMAIN}/{path.lstrip('/')}",
+                f"{API_DOMAIN}/{path.lstrip('/')}",
                 headers=headers,
             )
         except RequestException as e:
